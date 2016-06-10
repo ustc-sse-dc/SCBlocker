@@ -130,14 +130,16 @@ public class BlockManager {
         return result;
     }
 
+    // content == null ??
     public long saveBlockContent(BlockContent content){
         ContentValues values = new ContentValues();
-        values.put("number", content.getNumber());
-        values.put("type", content.getType());
-        values.put("content", content.getContent());
-        values.put("created", content.getCreated());
-        values.put("read", content.getRead());
-
+        if (content != null) {
+            values.put("number", content.getNumber());
+            values.put("type", content.getType());
+            values.put("content", content.getContent());
+            values.put("created", content.getCreated());
+            values.put("read", content.getRead());
+        }
         return mDbHelper.getWritableDatabase().insert(DbHelper.TABLE_BLOCKCONTENT, null, values);
 
     }
@@ -156,7 +158,7 @@ public class BlockManager {
         ContentValues values = new ContentValues();
         values.put("read", BlockContent.READED);
         mDbHelper.getWritableDatabase().update(DbHelper.TABLE_BLOCKCONTENT, values, "read=?",
-                new String[]{"0"});
+                new String[]{String.valueOf(BlockContent.UNREADED)});
     }
 
     public boolean blockSMS(String sender, String content){
