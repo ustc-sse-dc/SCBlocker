@@ -5,4 +5,26 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
     <string name="action_settings">Settings</string>
+
+
+    <string name="add_rule">Add Rule</string>
+    <string name="all_rule">All Rules</string>
+    <string name="block_content">Block Contents</string>
+    <string name="all">All</string>
+    <string name="call">Call</string>
+    <string name="sms">SMS</string>
+
+    <string name="rule_label">Rule</string>
+    <string name="rule_label_type">Type</string>
+    <string name="rule_label_block">Block</string>
+    <string name="rule_label_except">Except</string>
+    <string name="rule_remark">Remark</string>
+    <string name="rule_accept">Accept</string>
+
+
+    <string name="rule_empty_tip">Please input a non-empty block rule!</string>
+
+
+
+
 </resources>

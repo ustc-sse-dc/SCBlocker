@@ -1,9 +1,11 @@
 package edu.ustc.sse.scblocker.model;
 
+import java.io.Serializable;
+
 /** 拦截规则模型
  * Created by dc on 000011/6/11.
  */
-public class Rule {
+public class Rule implements Serializable{
 
     public static final int TYPE_STRING   = 0;
     public static final int TYPE_WILDCARD = 1;
@@ -16,16 +18,23 @@ public class Rule {
 
     private long id;
     private String content;         // 要拦截的号码、关键字、
-    private int type;               // block sms? call? or both?
-    private int sms;
-    private int call;
-    private int exception;
+    private int type;               // phone number? whildcard number? keyword for sms?
+                                    // block sms? call? or both?
+                                    // sms call block?
+    private int sms;                //  1   1    0(both)
+    private int call;               //  1   0    1(sms)
+                                    //  0   1    2(call)
+    private int exception;          // 白名单
     private long created;           // 规则建立时间
     private String remark;          // 规则的描述
 
 
-    public static int getTypeString() {
-        return TYPE_STRING;
+    public int getType() {
+        return type;
+    }
+
+    public void setType(int type) {
+        this.type = type;
     }
 
     public long getId() {
@@ -44,13 +53,6 @@ public class Rule {
         this.content = content;
     }
 
-    public int getType() {
-        return type;
-    }
-
-    public void setType(int type) {
-        this.type = type;
-    }
 
     public int getSms() {
         return sms;

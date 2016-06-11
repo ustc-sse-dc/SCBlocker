@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginLeft="8dp"
+                android:layout_marginRight="8dp"
+                android:background="@android:color/white"
+                android:elevation="2dp"
+                android:padding="16sp"
+    >
+
+    <ImageView
+        android:id="@+id/iv_blockType"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:src="@drawable/ic_block_both"
+        />
+
+    <TextView
+        android:id="@+id/tv_ruleContent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_toEndOf="@+id/iv_blockType"
+        android:layout_toRightOf="@+id/iv_blockType"
+        android:ellipsize="end"
+        android:text="18501567510"
+        android:textSize="16sp"
+        />
+
+    <TextView
+        android:id="@+id/tv_remark"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_toEndOf="@+id/tv_ruleContent"
+        android:layout_toRightOf="@+id/tv_ruleContent"
+        android:ellipsize="end"
+        android:gravity="end"
+        android:text="This is a test"
+        android:textSize="12sp"
+
+        />
+
+
+</RelativeLayout>

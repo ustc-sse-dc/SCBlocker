@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:layout_marginLeft="8dp"
+              android:layout_marginRight="8dp"
+              android:layout_marginTop="8dp"
+              android:background="@android:color/white"
+        android:elevation="2dp"
+    >
+
+    <TextView android:id="@+id/tv_number"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginLeft="14dp"
+        android:textSize="14sp"
+        android:text="+8618501567510"
+        android:textColor="@color/colorPrimaryDark"/>
+
+    <TextView android:id="@+id/tv_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="14dp"
+              android:layout_marginRight="14dp"
+              android:layout_marginTop="8dp"
+              android:textSize="12sp"
+              android:text="点击右上角的三个点，选择设置，可以更改主题哦，红蓝黄绿青蓝紫，自己的颜色，自己的主题！"
+        />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        >
+
+        <TextView android:id="@+id/tv_type"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+                  android:layout_alignParentStart="true"
+                  android:layout_alignParentLeft="true"
+            android:textColor="@color/colorAccent"
+            android:textSize="10sp"
+            android:text="新手指引"/>
+
+
+        <TextView android:id="@+id/tv_created"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:textSize="10sp"
+            android:text="2016/06/09 19:06:35"/>
+
+    </RelativeLayout>
+
+
+</LinearLayout>

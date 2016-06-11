@@ -1,10 +1,11 @@
 package edu.ustc.sse.scblocker.activity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.view.View;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -12,11 +13,21 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import edu.ustc.sse.scblocker.R;
+import edu.ustc.sse.scblocker.fragment.BlockContentFragment;
+import edu.ustc.sse.scblocker.fragment.RuleFragment;
+import edu.ustc.sse.scblocker.util.BlockManager;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
+
+    private FragmentManager mFragmentManager = getSupportFragmentManager();
+    private Fragment currentFragment;
+
+
+    private FloatingActionButton fab = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,14 +36,15 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                Intent intent = RuleEditActivity.newIntent(MainActivity.this, RuleEditActivity.OPERATION_ADD);
+                startActivity(intent);
             }
         });
+        fab.hide();
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -42,6 +54,12 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+        currentFragment = BlockContentFragment.newInstance(BlockManager.TYPE_ALL);
+        mFragmentManager.beginTransaction()
+                .add(R.id.fragment_container_relativelayout, currentFragment)
+                .commit();
+
     }
 
     @Override
@@ -82,22 +100,39 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_camera) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
-
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
-
+        if (id == R.id.add_rule) {
+            //TODO: Open add rule activity
+            Intent intent = RuleEditActivity.newIntent(this, RuleEditActivity.OPERATION_ADD);
+            startActivity(intent);
+        } else if (id == R.id.all_rules) {
+            currentFragment = new RuleFragment();
+            switchFragment(currentFragment);
+            fab.show();
+        } else if (id == R.id.blockcontent_all) {
+            currentFragment = BlockContentFragment.newInstance(BlockManager.TYPE_ALL);
+            switchFragment(currentFragment);
+            fab.hide();
+        } else if (id == R.id.blockcontent_call) {
+            currentFragment = BlockContentFragment.newInstance(BlockManager.TYPE_CALL);
+            switchFragment(currentFragment);
+            fab.hide();
+        } else if (id == R.id.blockcontent_sms) {
+            currentFragment = BlockContentFragment.newInstance(BlockManager.TYPE_SMS);
+            switchFragment(currentFragment);
+            fab.hide();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
+
+
+    private void switchFragment(Fragment fragment){
+        mFragmentManager.beginTransaction()
+                .replace(R.id.fragment_container_relativelayout, fragment)
+                .commit();
+    }
+
+
 }
