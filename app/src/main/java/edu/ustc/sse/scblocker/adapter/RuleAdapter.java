@@ -2,6 +2,7 @@ package edu.ustc.sse.scblocker.adapter;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -41,12 +42,44 @@ public class RuleAdapter extends RecyclerView.Adapter<RuleAdapter.RuleHolder> {
 
     @Override
     public void onBindViewHolder(RuleHolder holder, int position) {
-        Rule rule = rules.get(position);
+        Rule rule = getItem(position);
         if (rule != null){
-            holder.bindRule(rule);
+            ImageView iv_blockType = holder.getView(R.id.iv_blockType);
+            if (rule.getException() == 1){
+                iv_blockType.setImageResource(R.drawable.ic_except);
+            }else if (rule.getSms() == 1 && rule.getCall() == 1){
+                iv_blockType.setImageResource(R.drawable.ic_block_both);
+            }else if (rule.getSms() == 1){
+                iv_blockType.setImageResource(R.drawable.ic_block_sms);
+            }else if (rule.getCall() == 1){
+                iv_blockType.setImageResource(R.drawable.ic_block_call);
+            }
+
+            TextView tv_ruleContent = holder.getView(R.id.tv_ruleContent);
+            tv_ruleContent.setText(rule.getContent());
+            TextView tv_remark = holder.getView(R.id.tv_remark);
+            tv_remark.setText(rule.getRemark());
         }
     }
 
+    public Rule getItem(int position){
+        return rules.get(position);
+    }
+
+    public void add(int index, Rule rule){
+        rules.add(index, rule);
+        notifyDataSetChanged();
+    }
+    public void replace(int index, Rule rule){
+        rules.set(index, rule);
+        notifyDataSetChanged();
+    }
+    public void delete(int index){
+        rules.remove(index);
+        notifyDataSetChanged();
+    }
+
+    /**
     public static class RuleHolder extends RecyclerView.ViewHolder {
 
         private Rule mRule;
@@ -77,6 +110,29 @@ public class RuleAdapter extends RecyclerView.Adapter<RuleAdapter.RuleHolder> {
             tv_ruleContent.setText(mRule.getContent());
             tv_remark.setText(mRule.getRemark());
 
+        }
+
+    }
+
+     **/
+
+    public static class RuleHolder extends RecyclerView.ViewHolder {
+        private SparseArray<View> views = new SparseArray<>();
+        private View convertView;
+
+
+        public RuleHolder(View itemView){
+            super(itemView);
+            convertView = itemView;
+        }
+
+        public <T extends View> T getView(int resId){
+            View v = views.get(resId);
+            if (v == null){
+                v = convertView.findViewById(resId);
+                views.put(resId, v);
+            }
+            return (T) v;
         }
 
     }

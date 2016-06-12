@@ -1,9 +1,9 @@
 package edu.ustc.sse.scblocker.util;
 
-import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,33 +22,33 @@ public class BlockManager {
     public static final int TYPE_EXCEPT = 3;
 
     private DbHelper mDbHelper;
-    private ContentResolver mResolver;
 
-    public BlockManager(Context context){
+
+    public BlockManager(Context context) {
         mDbHelper = new DbHelper(context);
-        mResolver = context.getContentResolver();
     }
 
-    public List<Rule> getRules(int type){
+
+    public List<Rule> getRules(int type) {
         List<Rule> list = new ArrayList<>();
 
         Cursor cursor = null;
-        if (type == TYPE_ALL){
-            cursor = mDbHelper.getReadableDatabase().query(DbHelper.TABLE_RULE, new String[]{"_id","content","type","sms","call","exception","created","remark"},
+        if (type == TYPE_ALL) {
+            cursor = mDbHelper.getReadableDatabase().query(DbHelper.TABLE_RULE, new String[]{"_id", "content", "type", "sms", "call", "exception", "created", "remark"},
                     null, null, null, null, "created DESC");
-        }else if (type == TYPE_SMS){
-            cursor = mDbHelper.getReadableDatabase().query(DbHelper.TABLE_RULE, new String[]{"_id","content","type","sms", "call","exception","created","remark"},
-                    "sms = ?", new String[]{"1"}, null,null, "created DESC");
-        }else if (type == TYPE_CALL){
-            cursor = mDbHelper.getReadableDatabase().query(DbHelper.TABLE_RULE, new String[]{"_id","content","type","sms", "call","exception","created","remark"},
+        } else if (type == TYPE_SMS) {
+            cursor = mDbHelper.getReadableDatabase().query(DbHelper.TABLE_RULE, new String[]{"_id", "content", "type", "sms", "call", "exception", "created", "remark"},
+                    "sms = ?", new String[]{"1"}, null, null, "created DESC");
+        } else if (type == TYPE_CALL) {
+            cursor = mDbHelper.getReadableDatabase().query(DbHelper.TABLE_RULE, new String[]{"_id", "content", "type", "sms", "call", "exception", "created", "remark"},
                     "call = ?", new String[]{"1"}, null, null, "created DESC");
-        }else if (type == TYPE_EXCEPT) {
-            cursor = mDbHelper.getReadableDatabase().query(DbHelper.TABLE_RULE, new String[]{"_id","content","type","sms", "call","exception","created","remark"},
+        } else if (type == TYPE_EXCEPT) {
+            cursor = mDbHelper.getReadableDatabase().query(DbHelper.TABLE_RULE, new String[]{"_id", "content", "type", "sms", "call", "exception", "created", "remark"},
                     "exception = ?", new String[]{"1"}, null, null, "created DESC");
         }
 
-        if (cursor != null && cursor.moveToFirst()){
-            do{
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
                 Rule rule = new Rule();
                 rule.setId(cursor.getLong(0));
                 rule.setContent(cursor.getString(1));
@@ -60,16 +60,16 @@ public class BlockManager {
                 rule.setRemark(cursor.getString(7));
 
                 list.add(rule);
-            }while (cursor.moveToNext());
+            } while (cursor.moveToNext());
         }
 
-        if (cursor != null){
+        if (cursor != null) {
             cursor.close();
         }
         return list;
     }
 
-    public void saveRule(Rule rule){
+    public long saveRule(Rule rule) {
         ContentValues values = new ContentValues();
         values.put("content", rule.getContent());
         values.put("type", rule.getType());
@@ -78,10 +78,14 @@ public class BlockManager {
         values.put("exception", rule.getException());
         values.put("remark", rule.getRemark());
 
-        mDbHelper.getWritableDatabase().insert(DbHelper.TABLE_RULE, null, values);
+        return mDbHelper.getWritableDatabase().insert(DbHelper.TABLE_RULE, null, values);
     }
 
-    public void updateRule(Rule rule){
+    public long restoreRule(Rule rule) {
+        return saveRule(rule);
+    }
+
+    public void updateRule(Rule rule) {
         ContentValues values = new ContentValues();
         values.put("content", rule.getContent());
         values.put("type", rule.getType());
@@ -94,22 +98,38 @@ public class BlockManager {
         mDbHelper.getWritableDatabase().update(DbHelper.TABLE_RULE, values, "_id = ?", new String[]{String.valueOf(rule.getId())});
     }
 
-    public void deleteRule(Rule rule){
+    public void deleteRule(Rule rule) {
         mDbHelper.getWritableDatabase().delete(DbHelper.TABLE_RULE, "_id = ?", new String[]{String.valueOf(rule.getId())});
     }
 
     /**
      * Query from database all the block contents where _id > id
+     *
      * @param id
      * @return
      */
-    public List<BlockContent> getContents(long id){
-        List<BlockContent> result =new ArrayList<>();
-        Cursor cursor = mDbHelper.getReadableDatabase().query(
-                DbHelper.TABLE_BLOCKCONTENT, new String[]{"_id","number","type","content","created","read"},
-                "_id > ?", new String[]{String.valueOf(id)}, null, null, "created DESC"
-        );
-        if (cursor != null && cursor.moveToFirst()){
+    public ArrayList<BlockContent> getContents(long id, int type) {
+        ArrayList<BlockContent> result = new ArrayList<>();
+        Cursor cursor = null;
+
+        if (type == BlockContent.BLOCK_ALL) {
+            cursor = mDbHelper.getReadableDatabase().query(
+                    DbHelper.TABLE_BLOCKCONTENT, new String[]{"_id", "number", "type", "content", "created", "read"},
+                    "_id > ?", new String[]{String.valueOf(id)}, null, null, "created DESC"
+            );
+        } else if (type == BlockContent.BLOCK_CALL) {
+            cursor = mDbHelper.getReadableDatabase().query(
+                    DbHelper.TABLE_BLOCKCONTENT, new String[]{"_id", "number", "type", "content", "created", "read"},
+                    "_id > ? AND type = ?", new String[]{String.valueOf(id),String.valueOf(BlockContent.BLOCK_CALL)}, null, null, "created DESC"
+            );
+        } else if (type == BlockContent.BLOCK_SMS) {
+            cursor = mDbHelper.getReadableDatabase().query(
+                    DbHelper.TABLE_BLOCKCONTENT, new String[]{"_id", "number", "type", "content", "created", "read"},
+                    "_id > ? AND type = ?", new String[]{String.valueOf(id),String.valueOf(BlockContent.BLOCK_SMS)}, null, null, "created DESC"
+            );
+        }
+
+        if (cursor != null && cursor.moveToFirst()) {
             do {
                 BlockContent content = new BlockContent();
                 content.setId(cursor.getLong(0));
@@ -120,10 +140,10 @@ public class BlockManager {
                 content.setRead(cursor.getInt(5));
 
                 result.add(content);
-            }while(cursor.moveToNext());
+            } while (cursor.moveToNext());
         }
 
-        if (cursor != null){
+        if (cursor != null) {
             cursor.close();
         }
 
@@ -131,11 +151,11 @@ public class BlockManager {
     }
 
     // content == null ??
-    public long saveBlockContent(BlockContent content){
+    public long saveBlockContent(BlockContent content) {
         ContentValues values = new ContentValues();
         if (content != null) {
             values.put("number", content.getNumber());
-            values.put("type", content.getType());
+            values.put("type", content.getType()); // incoming call/sms
             values.put("content", content.getContent());
             values.put("created", content.getCreated());
             values.put("read", content.getRead());
@@ -144,100 +164,181 @@ public class BlockManager {
 
     }
 
-    public long restoreBlockContent(BlockContent content){
+    public long restoreBlockContent(BlockContent content) {
         return saveBlockContent(content);
     }
 
-    public int deleteBlockContent(BlockContent content){
+    public int deleteBlockContent(BlockContent content) {
         return mDbHelper.getWritableDatabase().delete(DbHelper.TABLE_BLOCKCONTENT, "created=?",
                 new String[]{String.valueOf(content.getCreated())});
     }
 
     // 将数据库中的所有拦截数据设为已读
-    public void readAllBlockContent(){
+    public void readAllBlockContent() {
         ContentValues values = new ContentValues();
         values.put("read", BlockContent.READED);
         mDbHelper.getWritableDatabase().update(DbHelper.TABLE_BLOCKCONTENT, values, "read=?",
                 new String[]{String.valueOf(BlockContent.UNREADED)});
     }
 
-    public boolean blockSMS(String sender, String content){
-        List<Rule> exceptions = getRules(TYPE_EXCEPT);
-        if (exceptions != null && exceptions.size() > 0){
-            for (Rule exception : exceptions){
-                switch (exception.getType()){
+    public boolean blockSMS(String sender, String content) {
+        Log.v(getClass().getSimpleName(), "From sender " + sender + " should block?");
+        List<Rule> exceptions = getRules(TYPE_EXCEPT); //白名单
+        if (exceptions != null && exceptions.size() > 0) {
+            for (Rule exception : exceptions) {
+                switch (exception.getType()) {
                     case Rule.TYPE_STRING:
-                        if (sender.equals(exception.getContent())){
+                        if (sender.equals(exception.getContent())) {
                             return false;
                         }
                         break;
                     case Rule.TYPE_WILDCARD:
                         //TODO: SMS excepted wildcard manipulating
+                        if (wildcardMatch(exception.getContent(), sender)) ;
                         return false;
                     case Rule.TYPE_KEYWORD:
                         //TODO: SMS excepted keyword manipulating
-                        return false;
+                        if (content.contains(exception.getContent())) {
+                            return false;
+                        }
+                        break;
                 }
             }
         }
 
         List<Rule> rules = getRules(TYPE_SMS);
-        if (rules != null && rules.size() > 0){
-            for (Rule rule : rules){
-                switch (rule.getType()){
+        if (rules != null && rules.size() > 0) {
+            for (Rule rule : rules) {
+                switch (rule.getType()) {
                     case Rule.TYPE_STRING:
-                        if (sender.equals(rule.getContent())){
+                        if (sender.equals(rule.getContent())) {
                             return true;
                         }
                         break;
                     case Rule.TYPE_WILDCARD:
                         //TODO: SMS wildcard manipulating
-                        return false;
+                        if (wildcardMatch(rule.getContent(), sender)) {
+                            return true;
+                        }
+                        break;
                     case Rule.TYPE_KEYWORD:
                         //TODO: SMS keyword manipulating
-                        return false;
+                        if (content.contains(rule.getContent())) {
+                            return true;
+                        }
+                        break;
                 }
             }
         }
-
         return false;
     }
 
-    public boolean blockCall(String caller){
+    public boolean blockCall(String caller) {
+        Log.v(getClass().getSimpleName(), "from caller "  + caller + " should block?");
         List<Rule> exceptions = getRules(TYPE_EXCEPT);
-        if (exceptions != null && exceptions.size() > 0){
-            for (Rule exception : exceptions){
-                switch (exception.getType()){
+        if (exceptions != null && exceptions.size() > 0) {
+            for (Rule exception : exceptions) {
+                switch (exception.getType()) {
                     case Rule.TYPE_STRING:
-                        if (caller.equals(exception.getContent())){
+                        if (caller.equals(exception.getContent())) {
                             return false;
                         }
                         break;
                     case Rule.TYPE_WILDCARD:
                         //TODO: Excepted Wildcard manipulating
-                        return false;
+                        if (wildcardMatch(exception.getContent(), caller)) {
+                            return false;
+                        }
+                        break;
                 }
             }
         }
 
         List<Rule> list = getRules(TYPE_CALL);
-        if (list != null && list.size() > 0){
-            for (Rule rule : list){
-                switch (rule.getType()){
+        if (list != null && list.size() > 0) {
+            for (Rule rule : list) {
+                switch (rule.getType()) {
                     case Rule.TYPE_STRING:
-                        if (caller.equals(rule.getContent())){
+                        if (caller.equals(rule.getContent())) {
                             return true;
                         }
                         break;
                     case Rule.TYPE_WILDCARD:
                         //TODO: Wildcard manipulating
-                        return false;
+                        if (wildcardMatch(rule.getContent(), caller)) {
+                            return true;
+                        }
+                        break;
                 }
             }
         }
 
-
         return false;
     }
+
+    //TODO: figure it out
+    private boolean wildcardMatch(String wildcard, String str) {
+        if (wildcard == null || str == null)
+            return false;
+
+        boolean result = false;
+        char c;
+        boolean beforeStar = false;
+        int back_i = 0;
+        int back_j = 0;
+        int i, j;
+        for (i = 0, j = 0; i < str.length(); ) {
+            if (wildcard.length() <= j) {
+                if (back_i != 0) {
+                    beforeStar = true;
+                    i = back_i;
+                    j = back_j;
+                    back_i = 0;
+                    back_j = 0;
+                    continue;
+                }
+                break;
+            }
+
+            if ((c = wildcard.charAt(j)) == '*') {
+                if (j == wildcard.length() - 1) {
+                    result = true;
+                    break;
+                }
+                beforeStar = true;
+                j++;
+                continue;
+            }
+
+            if (beforeStar) {
+                if (str.charAt(i) == c) {
+                    beforeStar = false;
+                    back_i = i + 1;
+                    back_j = j;
+                    j++;
+                }
+            } else {
+                if (c != '?' && c != str.charAt(i)) {
+                    result = false;
+                    if (back_i != 0) {
+                        beforeStar = true;
+                        i = back_i;
+                        j = back_j;
+                        back_i = 0;
+                        back_j = 0;
+                        continue;
+                    }
+                    break;
+                }
+                j++;
+            }
+            i++;
+        }
+
+        if (i == str.length() && j == wildcard.length())
+            result = true;
+        return result;
+    }
+
 
 }

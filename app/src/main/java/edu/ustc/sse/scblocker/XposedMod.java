@@ -7,6 +7,7 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.util.Log;
 
 import java.util.Date;
 
@@ -27,7 +28,8 @@ import edu.ustc.sse.scblocker.util.BlockManager;
  */
 public class XposedMod implements IXposedHookZygoteInit, IXposedHookLoadPackage, IXposedHookInitPackageResources{
 
-    public static final String MOUDLE_NAME = BuildConfig.APPLICATION_ID;
+    public static final String MODULE_NAME = BuildConfig.APPLICATION_ID;
+
     public static final String FILTER_NOTIFY_BLOCKED = BuildConfig.APPLICATION_ID + "_NOTIFY_BLOCKED";
 
 
@@ -94,7 +96,7 @@ public class XposedMod implements IXposedHookZygoteInit, IXposedHookLoadPackage,
             BlockContent content = null;
             Bundle bundle = intent.getExtras();
             int type = bundle.getInt("type");
-            switch (type){
+            switch (type){ // incoming sms or incoming call
                 case BlockContent.BLOCK_CALL:
                     content = new BlockContent();
                     content.setNumber(bundle.getString("number"));
@@ -114,6 +116,7 @@ public class XposedMod implements IXposedHookZygoteInit, IXposedHookLoadPackage,
             }
 
             mBlockerManager.saveBlockContent(content);
+            Log.v(getClass().getSimpleName(), "Block content from " + content.getNumber() + " at " + content.getCreated());
         }
     }
 

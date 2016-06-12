@@ -6,6 +6,7 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -13,7 +14,6 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import java.util.ArrayList;
-import java.util.Date;
 
 import edu.ustc.sse.scblocker.R;
 import edu.ustc.sse.scblocker.activity.MainActivity;
@@ -31,8 +31,11 @@ public class BlockContentFragment extends Fragment {
 
     private MainActivity mMainActivity;
     private RecyclerView mRecyclerView;
-
     private BlockContentAdapter mAdapter;
+
+    private BlockManager mBlockManager;
+    private ArrayList<BlockContent> mBlockContents;
+
 
     private int type;
 
@@ -51,9 +54,10 @@ public class BlockContentFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mMainActivity = (MainActivity) getActivity();
-
+        mBlockManager = new BlockManager(mMainActivity);
         this.type = getArguments().getInt(ARG_BLOCK_CONTENT_TYPE);
 
+        Log.v(getClass().getSimpleName(), "type is " + type);
 
         setHasOptionsMenu(true);
     }
@@ -73,15 +77,18 @@ public class BlockContentFragment extends Fragment {
             mRecyclerView.setLayoutManager(new LinearLayoutManager(mMainActivity));
 
 
-            ArrayList<BlockContent> list = setupContent(this.type);
-            mAdapter = new BlockContentAdapter(mMainActivity, list);
+            mBlockContents = mBlockManager.getContents(-1, type);
+            mAdapter = new BlockContentAdapter(mMainActivity, mBlockContents);
             mRecyclerView.setAdapter(mAdapter);
 
             SwipeDismissRecyclerViewTouchListener listener = new SwipeDismissRecyclerViewTouchListener.Builder(
                     mRecyclerView,
                     new SwipeDismissRecyclerViewTouchListener.DismissCallbacks(){
                         @Override
-                        public boolean canDismiss(int i) {
+                        public boolean canDismiss(int position) {
+                            if (position < 0){
+                                return false;
+                            }
                             return true;
                         }
                         @Override
@@ -118,64 +125,7 @@ public class BlockContentFragment extends Fragment {
     }
 
 
-    // Fill testing data
-    private ArrayList<BlockContent> setupContent(int type) {
-        ArrayList<BlockContent> contents = new ArrayList<>();
-        long now = new Date().getTime();
 
-        switch (type){
-            case BlockManager.TYPE_ALL:
-                insertCalls(contents, now);
-                insertSMSes(contents, now);
-                break;
-            case BlockManager.TYPE_CALL:
-                insertCalls(contents, now);
-                break;
-            case BlockManager.TYPE_SMS:
-                insertSMSes(contents, now);
-                break;
-        }
-        return contents;
-    }
-    private void insertCalls(ArrayList<BlockContent> contents, long now){
-        BlockContent content1 = new BlockContent();
-        content1.setNumber("18501567510");
-        content1.setType(BlockContent.BLOCK_CALL);
-        content1.setContent("");
-        content1.setCreated(now);
-        content1.setRead(BlockContent.UNREADED);
-        contents.add(content1);
-        contents.add(content1);
-
-        for (int i = 0; i < 5; i++){
-            contents.add(content1);
-        }
-    }
-    private void insertSMSes(ArrayList<BlockContent> contents, long now){
-        BlockContent content = new BlockContent();
-        content.setNumber("10010");
-        content.setType(BlockContent.BLOCK_SMS);
-        content.setContent("您已欠费，请及时充值。\n现在您只能接听电话。");
-        content.setCreated(now);
-        content.setRead(BlockContent.UNREADED);
-
-        contents.add(content);
-        contents.add(content);
-
-        content = new BlockContent();
-        content.setNumber("15196310245");
-        content.setType(BlockContent.BLOCK_SMS);
-        content.setContent("这是测试，这是测试，这是测试，这是测试，这是测试，这是测试，这是测试，这是测试，这是测试，");
-        content.setCreated(now);
-        content.setRead(BlockContent.UNREADED);
-        contents.add(content);
-        contents.add(content);
-        contents.add(content);
-
-        for (int i = 0; i < 5; i++){
-            contents.add(content);
-        }
-    }
 
 
 }

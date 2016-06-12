@@ -1,5 +1,6 @@
 package edu.ustc.sse.scblocker.fragment;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -11,32 +12,35 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
 import edu.ustc.sse.scblocker.R;
 import edu.ustc.sse.scblocker.activity.MainActivity;
 import edu.ustc.sse.scblocker.activity.RuleEditActivity;
 import edu.ustc.sse.scblocker.adapter.RuleAdapter;
 import edu.ustc.sse.scblocker.model.Rule;
+import edu.ustc.sse.scblocker.util.BlockManager;
 import io.github.codefalling.recyclerviewswipedismiss.SwipeDismissRecyclerViewTouchListener;
 
 /**
  * Created by dc on 000012/6/12.
  */
-public class RuleFragment extends Fragment{
+public class RuleFragment extends Fragment  {
+
+    public static final int REQUEST_CODE = 0;
 
     private MainActivity mMainActivity;
     private RecyclerView mRecyclerView;
     private RuleAdapter mRuleAdapter;
 
-    private List<Rule> mRules;
+    private BlockManager mBlockManager;
+
+    private int positionUpdated = -1;
+    private Rule ruleUpdated = null;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mMainActivity = (MainActivity)getActivity();
+        mMainActivity = (MainActivity) getActivity();
+        mBlockManager = new BlockManager(mMainActivity);
         setHasOptionsMenu(true);
     }
 
@@ -46,28 +50,32 @@ public class RuleFragment extends Fragment{
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_rule, container, false);
 
-        mRecyclerView = (RecyclerView)view.findViewById(R.id.rv_rules);
+        mRecyclerView = (RecyclerView) view.findViewById(R.id.rv_rules);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(mMainActivity));
 
-        mRules = setupRules();
 
-        mRuleAdapter = new RuleAdapter(mMainActivity, mRules);
+        mRuleAdapter = new RuleAdapter(mMainActivity, mBlockManager.getRules(BlockManager.TYPE_ALL));
         mRecyclerView.setAdapter(mRuleAdapter);
 
         SwipeDismissRecyclerViewTouchListener listener = new SwipeDismissRecyclerViewTouchListener.Builder(
                 mRecyclerView,
                 new SwipeDismissRecyclerViewTouchListener.DismissCallbacks() {
                     @Override
-                    public boolean canDismiss(int i) {
+                    public boolean canDismiss(int position) {
+                        if (position < 0) {
+                            return false;
+                        }
                         return true;
                     }
 
                     @Override
                     public void onDismiss(View view) {
-                        int id = mRecyclerView.getChildAdapterPosition(view);
-                        mRules.remove(id);
-                        mRuleAdapter.notifyDataSetChanged();
-                        Snackbar.make(mRecyclerView, String.format("Rule item %d", id),Snackbar.LENGTH_LONG).show();
+                        int id = mRecyclerView.getChildPosition(view);
+                        Rule rule = mRuleAdapter.getItem(id);
+                        mRuleAdapter.delete(id);
+                        mBlockManager.deleteRule(rule);
+                        //TODO: Delete from database and notify change
+                        Snackbar.make(mRecyclerView, String.format("Rule item %d", id), Snackbar.LENGTH_LONG).show();
                     }
                 })
                 .setIsVertical(false)
@@ -75,15 +83,18 @@ public class RuleFragment extends Fragment{
                         new SwipeDismissRecyclerViewTouchListener.OnItemClickCallBack() {
                             @Override
                             public void onClick(int position) {
-                                if (position < 0){
+                                if (position < 0) {
                                     return;
                                 }
-                                Rule rule = mRules.get(position);
-                                if (rule != null){
+                                positionUpdated = position;
+                                Rule rule = mRuleAdapter.getItem(position);
+                                ruleUpdated = rule;
+                                if (rule != null) {
                                     Intent intent = RuleEditActivity.newIntent(mMainActivity,
                                             RuleEditActivity.OPERATION_MODIFY);
                                     intent.putExtra("rule", rule);
-                                    startActivity(intent);
+                                    intent.putExtra("position", position);
+                                    startActivityForResult(intent, REQUEST_CODE);
                                 }
                             }
                         }
@@ -91,7 +102,7 @@ public class RuleFragment extends Fragment{
                 .setItemTouchCallback(
                         new SwipeDismissRecyclerViewTouchListener.OnItemTouchCallBack() {
                             @Override
-                            public void onTouch(int i) {
+                            public void onTouch(int position) {
 
                             }
                         }
@@ -103,45 +114,31 @@ public class RuleFragment extends Fragment{
         return view;
     }
 
-    private ArrayList<Rule> setupRules(){
-        ArrayList<Rule> list = new ArrayList<>();
-
-        long now = new Date().getTime();
-
-        Rule rule = new Rule();
-        rule.setContent("10010");
-        rule.setType(Rule.TYPE_STRING);
-        rule.setCall(1);
-        rule.setSms(1);
-        rule.setException(0);
-        rule.setRemark("中国联通");
-        rule.setCreated(now);
-        list.add(rule);
-
-        rule = new Rule();
-        rule.setContent("10086");
-        rule.setType(Rule.TYPE_STRING);
-        rule.setCall(1);
-        rule.setSms(0);
-        rule.setException(0);
-        rule.setRemark("中国移动");
-        rule.setCreated(now);
-        list.add(rule);
-
-        rule = new Rule();
-        rule.setContent("18501567510");
-        rule.setType(Rule.TYPE_STRING);
-        rule.setCall(1);
-        rule.setSms(1);
-        rule.setException(0);
-        rule.setRemark("Who knows you?");
-        rule.setCreated(now);
-        list.add(rule);
-
-
-        return list;
+    @Override
+    public void onResume() {
+        super.onResume();
     }
 
+
+
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode != Activity.RESULT_OK) {
+            return;
+        }
+
+        Bundle bundle = data.getExtras();
+        Rule rule = (Rule) bundle.get("rule");
+        int position = bundle.getInt("position");
+        if (position == -1) {
+            mRuleAdapter.add(0, rule);
+        } else {
+            mRuleAdapter.replace(position, rule);
+        }
+
+
+    }
 
 
 }

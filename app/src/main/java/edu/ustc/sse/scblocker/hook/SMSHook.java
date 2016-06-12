@@ -17,7 +17,6 @@ import edu.ustc.sse.scblocker.model.BlockContent;
 import edu.ustc.sse.scblocker.util.BlockManager;
 
 
-
 /**
  * Created by dc on 000005/6/5.
  */
@@ -30,14 +29,14 @@ public class SMSHook {
     private SparseArray<String[]> smsArrays = new SparseArray<>();
 
 
-    public void initZygote(IXposedHookZygoteInit.StartupParam startupParam){
+    public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
 
         Class<?> clazz = XposedHelpers.findClass("com.android.internal.telephony.RIL", null);
-        XposedBridge.hookAllConstructors(clazz, new XC_MethodHook(){
+        XposedBridge.hookAllConstructors(clazz, new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                mContext = (Context)param.args[0];
-                mBlockerManager =  new BlockManager(mContext);
+                mContext = (Context) param.args[0];
+                mBlockerManager = new BlockManager(mContext);
             }
         });
 
@@ -49,24 +48,24 @@ public class SMSHook {
                 int position = p.dataPosition();
                 int response = p.readInt();
 
-                switch (response){
+                switch (response) {
                     case 1003:    // RILConstants.RIL_UNSOL_RESPONSE_NEW_SMS
-                        try{
+                        try {
                             boolean received = true;
 
                             String a[] = new String[2];
-                            a[1] = (String)XposedHelpers.callMethod(param.thisObject,"responseString", p);
+                            a[1] = (String) XposedHelpers.callMethod(param.thisObject, "responseString", p);
 
-                            final SmsMessage sms = (SmsMessage)XposedHelpers.callStaticMethod(SmsMessage.class,
-                                    "newFromCMT", (Object)a);
+                            final SmsMessage sms = (SmsMessage) XposedHelpers.callStaticMethod(SmsMessage.class,
+                                    "newFromCMT", (Object) a);
                             final String sender = sms.getOriginatingAddress();
                             String content = sms.getMessageBody();
 
                             Object smsHeader = XposedHelpers.callMethod(XposedHelpers.getObjectField(sms,
                                     "mWrappedSmsMessage"), "getUserDataHeader");
-                            if (smsHeader != null){
+                            if (smsHeader != null) {
                                 Object concatRef = XposedHelpers.getObjectField(smsHeader, "concatRef");
-                                if (concatRef == null){
+                                if (concatRef == null) {
                                     return;
                                 }
 
@@ -75,62 +74,58 @@ public class SMSHook {
                                 int msgCount = XposedHelpers.getIntField(concatRef, "msgCount");
 
                                 String[] smsArray = smsArrays.get(refNumber);
-                                if (smsArray == null){
+                                if (smsArray == null) {
                                     smsArray = new String[msgCount];
                                     smsArrays.put(refNumber, smsArray);
                                 }
                                 smsArray[seqNumber - 1] = content;
 
-                                if (isFullFilled(smsArray)){
+                                if (isFullFilled(smsArray)) {
                                     content = TextUtils.join("", smsArray);
                                     smsArrays.remove(refNumber);
-                                }else {
+                                } else {
                                     received = false;
                                 }
                             }
 
 
-                            if (received){
+                            if (received) {
                                 //判断是否需要拦截该短信
-                                if (mBlockerManager.blockSMS(sender, content)){
-                                    try{
+                                if (mBlockerManager.blockSMS(sender, content)) {
+                                    try {
                                         XposedHelpers.callMethod(param.thisObject, "acknowledgeLastIncomingGsmSms",
                                                 true, 0, null);
-                                    }catch (Throwable t){
+                                    } catch (Throwable t) {
                                         XposedHelpers.callMethod(param.thisObject, "acknowledgeLastIncomingCdmaSms",
                                                 true, 0, null);
                                     }
+
+                                    param.setResult(null);
+
+                                    //  后续处理
+                                    Intent intent = new Intent(XposedMod.FILTER_NOTIFY_BLOCKED);
+                                    intent.putExtra("type", BlockContent.BLOCK_SMS);
+                                    intent.putExtra("number", sender);
+                                    intent.putExtra("content", content);
+                                    intent.putExtra("created", sms.getTimestampMillis());
+
+                                    mContext.sendBroadcast(intent);
                                 }
-
-                                param.setResult(null);
-
-                                //  后续处理
-                                Intent intent = new Intent(XposedMod.FILTER_NOTIFY_BLOCKED);
-                                intent.putExtra("type", BlockContent.BLOCK_SMS);
-                                intent.putExtra("number", sender);
-                                intent.putExtra("content", content);
-                                intent.putExtra("created", sms.getTimestampMillis());
-
-                                mContext.sendBroadcast(intent);
                             }
-
-                        }catch (Throwable t){
+                        } catch (Throwable t) {
                             Log.e(TAG, "Error in blocking SMS", t);
                         }
                         break;
-
-
                 }
-
                 p.setDataPosition(position);
             }
         });
 
     }
 
-    private boolean isFullFilled(String[] smss){
-        for (String sms : smss){
-            if (sms == null){
+    private boolean isFullFilled(String[] smss) {
+        for (String sms : smss) {
+            if (sms == null) {
                 return false;
             }
         }

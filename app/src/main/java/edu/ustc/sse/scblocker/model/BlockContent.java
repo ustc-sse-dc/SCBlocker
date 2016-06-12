@@ -9,6 +9,7 @@ public class BlockContent {
     //用来区分拦截的具体内容
     public static final int BLOCK_CALL = 0;
     public static final int BLOCK_SMS  = 1;
+    public static final int BLOCK_ALL = 2;
 
     public static final int UNREADED = 0;
     public static final int READED   = 1;
@@ -16,7 +17,7 @@ public class BlockContent {
 
     private long id;
     private String number;      // 拦截的号码
-    private int type;           // 拦截的类型
+    private int type;           // 拦截的类型(incoming call or incoming sms?)
     private String content;     // 拦截的内容
     private long created;       // 拦截的时间
     private int read;           //

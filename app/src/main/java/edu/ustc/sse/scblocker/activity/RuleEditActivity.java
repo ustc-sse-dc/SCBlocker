@@ -18,6 +18,7 @@ import android.widget.Spinner;
 
 import edu.ustc.sse.scblocker.R;
 import edu.ustc.sse.scblocker.model.Rule;
+import edu.ustc.sse.scblocker.util.BlockManager;
 
 /**
  * Created by dc on 000012/6/12.
@@ -39,6 +40,11 @@ public class RuleEditActivity extends AppCompatActivity implements View.OnClickL
     private Button btn_accept;
 
 
+    private BlockManager mBlockManager;
+
+    private long id = -1;
+    private int position = -1;
+
     public static Intent newIntent(Context context, String operation){
         Intent intent = new Intent(context, RuleEditActivity.class);
         intent.putExtra(EXTRA_OPERATION, operation);
@@ -50,6 +56,8 @@ public class RuleEditActivity extends AppCompatActivity implements View.OnClickL
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_rule);
+
+        mBlockManager = new BlockManager(this);
 
         ll_container = (LinearLayout)findViewById(R.id.ll_container_rule);
 
@@ -76,7 +84,9 @@ public class RuleEditActivity extends AppCompatActivity implements View.OnClickL
 
         }else if (operation.equals(OPERATION_MODIFY)){
             Rule rule = (Rule)intent.getSerializableExtra("rule");
+            this.position = intent.getIntExtra("position", -1);
             if (rule != null){
+                this.id = rule.getId();
                 et_rule.setText(rule.getContent());
                 sp_type.setSelection(rule.getType());
                 cb_except.setChecked(rule.getException() == 1);
@@ -86,13 +96,23 @@ public class RuleEditActivity extends AppCompatActivity implements View.OnClickL
 
             }
         }
-
-
     }
 
     @Override
-    public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        switch (parent.getId()){
+            case R.id.sp_type:
+                if (position == Rule.TYPE_KEYWORD){
+                    sp_block.setSelection(Rule.BLOCK_SMS);
+                }
+                break;
+            case R.id.sp_block:
+                if (position != Rule.BLOCK_SMS && sp_type.getSelectedItemPosition() == Rule.TYPE_KEYWORD){
+                    sp_block.setSelection(Rule.BLOCK_SMS);
 
+                }
+                break;
+        }
     }
 
     @Override
@@ -126,10 +146,22 @@ public class RuleEditActivity extends AppCompatActivity implements View.OnClickL
                     rule.setException(cb_except.isChecked() ? 1 : 0);
                     rule.setRemark(et_remark.getText().toString().trim());
 
-                    //TODO: insert new/updated rule into database
+                    //insert new/updated rule into database
+                    boolean isModify = id != -1;
+                    if (isModify){
+                        rule.setId(id);
+                        mBlockManager.updateRule(rule);
+                    } else {
+                        rule.setId(mBlockManager.saveRule(rule));
+                    }
 
                     // notify data changed
-
+                    Intent intent = new Intent();
+                    Bundle bundle = new Bundle();
+                    bundle.putInt("position", position);
+                    bundle.putSerializable("rule", rule);
+                    intent.putExtras(bundle);
+                    setResult(RESULT_OK, intent);
 
                     finish();
                 }

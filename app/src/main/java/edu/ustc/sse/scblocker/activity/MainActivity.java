@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GravityCompat;
@@ -18,6 +19,7 @@ import android.view.View;
 import edu.ustc.sse.scblocker.R;
 import edu.ustc.sse.scblocker.fragment.BlockContentFragment;
 import edu.ustc.sse.scblocker.fragment.RuleFragment;
+import edu.ustc.sse.scblocker.model.BlockContent;
 import edu.ustc.sse.scblocker.util.BlockManager;
 
 public class MainActivity extends AppCompatActivity
@@ -40,8 +42,10 @@ public class MainActivity extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = RuleEditActivity.newIntent(MainActivity.this, RuleEditActivity.OPERATION_ADD);
-                startActivity(intent);
+                if (currentFragment instanceof RuleFragment){
+                    Intent intent = RuleEditActivity.newIntent(MainActivity.this, RuleEditActivity.OPERATION_ADD);
+                    currentFragment.startActivityForResult(intent, RuleFragment.REQUEST_CODE);
+                }
             }
         });
         fab.hide();
@@ -102,22 +106,26 @@ public class MainActivity extends AppCompatActivity
 
         if (id == R.id.add_rule) {
             //TODO: Open add rule activity
-            Intent intent = RuleEditActivity.newIntent(this, RuleEditActivity.OPERATION_ADD);
-            startActivity(intent);
+            if (currentFragment instanceof RuleFragment){
+                Intent intent = RuleEditActivity.newIntent(this, RuleEditActivity.OPERATION_ADD);
+                currentFragment.startActivityForResult(intent, RuleFragment.REQUEST_CODE);
+            }else {
+                Snackbar.make(fab, "Add rule only allowed in rule's panel!", Snackbar.LENGTH_LONG).show();
+            }
         } else if (id == R.id.all_rules) {
             currentFragment = new RuleFragment();
             switchFragment(currentFragment);
             fab.show();
         } else if (id == R.id.blockcontent_all) {
-            currentFragment = BlockContentFragment.newInstance(BlockManager.TYPE_ALL);
+            currentFragment = BlockContentFragment.newInstance(BlockContent.BLOCK_ALL);
             switchFragment(currentFragment);
             fab.hide();
         } else if (id == R.id.blockcontent_call) {
-            currentFragment = BlockContentFragment.newInstance(BlockManager.TYPE_CALL);
+            currentFragment = BlockContentFragment.newInstance(BlockContent.BLOCK_CALL);
             switchFragment(currentFragment);
             fab.hide();
         } else if (id == R.id.blockcontent_sms) {
-            currentFragment = BlockContentFragment.newInstance(BlockManager.TYPE_SMS);
+            currentFragment = BlockContentFragment.newInstance(BlockContent.BLOCK_SMS);
             switchFragment(currentFragment);
             fab.hide();
         }
@@ -128,11 +136,11 @@ public class MainActivity extends AppCompatActivity
     }
 
 
+
     private void switchFragment(Fragment fragment){
         mFragmentManager.beginTransaction()
                 .replace(R.id.fragment_container_relativelayout, fragment)
                 .commit();
     }
-
 
 }
