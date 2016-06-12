@@ -19,6 +19,7 @@ import android.view.View;
 import edu.ustc.sse.scblocker.R;
 import edu.ustc.sse.scblocker.fragment.BlockContentFragment;
 import edu.ustc.sse.scblocker.fragment.RuleFragment;
+import edu.ustc.sse.scblocker.fragment.SettingFragment;
 import edu.ustc.sse.scblocker.model.BlockContent;
 import edu.ustc.sse.scblocker.util.BlockManager;
 
@@ -126,6 +127,10 @@ public class MainActivity extends AppCompatActivity
             fab.hide();
         } else if (id == R.id.blockcontent_sms) {
             currentFragment = BlockContentFragment.newInstance(BlockContent.BLOCK_SMS);
+            switchFragment(currentFragment);
+            fab.hide();
+        } else if (id == R.id.setting) {
+            currentFragment = new SettingFragment();
             switchFragment(currentFragment);
             fab.hide();
         }

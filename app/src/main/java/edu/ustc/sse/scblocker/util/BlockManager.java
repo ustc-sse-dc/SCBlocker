@@ -181,6 +181,19 @@ public class BlockManager {
                 new String[]{String.valueOf(BlockContent.UNREADED)});
     }
 
+    public int getUnReadCount(){
+        int count = 0;
+
+        Cursor cursor = mDbHelper.getReadableDatabase().query(DbHelper.TABLE_BLOCKCONTENT, new String[]{"_id"},
+                "read=?", new String[]{"0"}, null, null, null);
+        if (cursor != null){
+            count = cursor.getCount();
+            cursor.close();
+        }
+        return count;
+    }
+
+
     public boolean blockSMS(String sender, String content) {
         Log.v(getClass().getSimpleName(), "From sender " + sender + " should block?");
         List<Rule> exceptions = getRules(TYPE_EXCEPT); //白名单
