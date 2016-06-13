@@ -27,6 +27,13 @@
             android:parentActivityName=".activity.MainActivity">
         </activity>
 
+
+        <provider
+            android:authorities="${applicationId}.provider.BlockProvider"
+            android:name=".util.BlockProvider"
+            android:exported="true"
+            android:multiprocess="true" />
+
         <meta-data
             android:name="xposedmodule"
             android:value="true"/>

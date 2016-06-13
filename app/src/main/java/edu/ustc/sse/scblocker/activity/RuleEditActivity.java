@@ -16,6 +16,8 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 
+import java.util.Date;
+
 import edu.ustc.sse.scblocker.R;
 import edu.ustc.sse.scblocker.model.Rule;
 import edu.ustc.sse.scblocker.util.BlockManager;
@@ -145,6 +147,7 @@ public class RuleEditActivity extends AppCompatActivity implements View.OnClickL
                     rule.setCall(sp_block.isEnabled() && sp_block.getSelectedItemPosition() != Rule.BLOCK_SMS ? 1 : 0);
                     rule.setException(cb_except.isChecked() ? 1 : 0);
                     rule.setRemark(et_remark.getText().toString().trim());
+                    rule.setCreated(new Date().getTime());
 
                     //insert new/updated rule into database
                     boolean isModify = id != -1;

@@ -6,7 +6,6 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -42,7 +41,6 @@ public class BlockContentFragment extends Fragment {
     public static BlockContentFragment newInstance(int type){
         BlockContentFragment fragment = new BlockContentFragment();
         Bundle args = new Bundle();
-
         args.putInt(ARG_BLOCK_CONTENT_TYPE, type);
         fragment.setArguments(args);
 
@@ -56,9 +54,6 @@ public class BlockContentFragment extends Fragment {
         mMainActivity = (MainActivity) getActivity();
         mBlockManager = new BlockManager(mMainActivity);
         this.type = getArguments().getInt(ARG_BLOCK_CONTENT_TYPE);
-
-        Log.v(getClass().getSimpleName(), "type is " + type);
-
         setHasOptionsMenu(true);
     }
 
@@ -76,7 +71,6 @@ public class BlockContentFragment extends Fragment {
             mRecyclerView = (RecyclerView) view.findViewById(R.id.rv_blockcontent);
             mRecyclerView.setLayoutManager(new LinearLayoutManager(mMainActivity));
 
-
             mBlockContents = mBlockManager.getContents(-1, type);
             mAdapter = new BlockContentAdapter(mMainActivity, mBlockContents);
             mRecyclerView.setAdapter(mAdapter);
@@ -93,10 +87,10 @@ public class BlockContentFragment extends Fragment {
                         }
                         @Override
                         public void onDismiss(View view) {
-                            int id = mRecyclerView.getChildAdapterPosition(view);
-                            mAdapter.data.remove(id);
-                            //TODO: Database deletion operation
-                            mAdapter.notifyDataSetChanged();
+                            int id = mRecyclerView.getChildPosition(view);
+                            BlockContent content = mAdapter.get(id);
+                            mAdapter.delete(id);
+                            mBlockManager.deleteBlockContent(content);
                             Snackbar.make(mRecyclerView, String.format("Deleted item %d", id),Snackbar.LENGTH_LONG).show();
                         }
                     })
@@ -123,8 +117,6 @@ public class BlockContentFragment extends Fragment {
 
         return view;
     }
-
-
 
 
 

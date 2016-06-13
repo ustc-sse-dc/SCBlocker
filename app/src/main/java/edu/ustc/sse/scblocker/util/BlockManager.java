@@ -1,13 +1,18 @@
 package edu.ustc.sse.scblocker.util;
 
+import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.net.Uri;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
+import edu.ustc.sse.scblocker.BuildConfig;
 import edu.ustc.sse.scblocker.model.BlockContent;
 import edu.ustc.sse.scblocker.model.Rule;
 
@@ -16,16 +21,33 @@ import edu.ustc.sse.scblocker.model.Rule;
  */
 public class BlockManager {
 
+    private static final String COUNTRY_CODES = ",376,971,93,355,374,599,244,672,54,43,61,297,994,387,880,32,226,359,973,257" +
+            ",229,590,673,591,55,975,267,375,501,1,61,243,236,242,41,225,682,56,237,86" +
+            ",57,506,53,238,61,357,420,49,253,45,213,593,372,20,291,34,251,358,679,500" +
+            ",691,298,33,241,44,995,233,350,299,220,224,240,30,502,245,592,852,504,385,509" +
+            ",36,62,353,972,44,91,964,98,39,962,81,254,996,855,686,269,850,82,965,7" +
+            ",856,961,423,94,231,266,370,352,371,218,212,377,373,382,261,692,389,223,95,976" +
+            ",853,222,356,230,960,265,52,60,258,264,687,227,234,505,31,47,977,674,683,64" +
+            ",968,507,51,689,675,63,92,48,508,870,1,351,680,595,974,40,381,7,250,966" +
+            ",677,248,249,46,65,290,386,421,232,378,221,252,597,239,503,963,268,235,228,66" +
+            ",992,690,670,993,216,676,90,688,886,255,380,256,1,598,998,39,58,84,678,681" +
+            ",685,967,262,27,260,263,";
+
     public static final int TYPE_ALL = 0;
     public static final int TYPE_SMS = 1;
     public static final int TYPE_CALL = 2;
     public static final int TYPE_EXCEPT = 3;
 
-    private DbHelper mDbHelper;
+    private static final String AUTHORITY = BuildConfig.APPLICATION_ID + ".provider.BlockProvider";
 
+    private static final Uri URI_RULE_ALL = Uri.parse("content://" + AUTHORITY + "/rule");
+    private static final Uri URI_BLOCKCONTENT_ALL = Uri.parse("content://" + AUTHORITY + "/blockcontent");
+
+
+    private ContentResolver resolver;
 
     public BlockManager(Context context) {
-        mDbHelper = new DbHelper(context);
+        resolver = context.getContentResolver();
     }
 
 
@@ -34,17 +56,17 @@ public class BlockManager {
 
         Cursor cursor = null;
         if (type == TYPE_ALL) {
-            cursor = mDbHelper.getReadableDatabase().query(DbHelper.TABLE_RULE, new String[]{"_id", "content", "type", "sms", "call", "exception", "created", "remark"},
-                    null, null, null, null, "created DESC");
+            cursor = resolver.query(URI_RULE_ALL, new String[]{"_id", "content", "type", "sms", "call", "exception", "created", "remark"},
+                    null, null, "created DESC");
         } else if (type == TYPE_SMS) {
-            cursor = mDbHelper.getReadableDatabase().query(DbHelper.TABLE_RULE, new String[]{"_id", "content", "type", "sms", "call", "exception", "created", "remark"},
-                    "sms = ?", new String[]{"1"}, null, null, "created DESC");
+            cursor = resolver.query(URI_RULE_ALL, new String[]{"_id", "content", "type", "sms", "call", "exception", "created", "remark"},
+                    "sms = ?", new String[]{"1"}, "created DESC");
         } else if (type == TYPE_CALL) {
-            cursor = mDbHelper.getReadableDatabase().query(DbHelper.TABLE_RULE, new String[]{"_id", "content", "type", "sms", "call", "exception", "created", "remark"},
-                    "call = ?", new String[]{"1"}, null, null, "created DESC");
+            cursor = resolver.query(URI_RULE_ALL, new String[]{"_id", "content", "type", "sms", "call", "exception", "created", "remark"},
+                    "call = ?", new String[]{"1"}, "created DESC");
         } else if (type == TYPE_EXCEPT) {
-            cursor = mDbHelper.getReadableDatabase().query(DbHelper.TABLE_RULE, new String[]{"_id", "content", "type", "sms", "call", "exception", "created", "remark"},
-                    "exception = ?", new String[]{"1"}, null, null, "created DESC");
+            cursor = resolver.query(URI_RULE_ALL, new String[]{"_id", "content", "type", "sms", "call", "exception", "created", "remark"},
+                    "exception = ?", new String[]{"1"}, "created DESC");
         }
 
         if (cursor != null && cursor.moveToFirst()) {
@@ -66,6 +88,7 @@ public class BlockManager {
         if (cursor != null) {
             cursor.close();
         }
+
         return list;
     }
 
@@ -77,8 +100,9 @@ public class BlockManager {
         values.put("call", rule.getCall());
         values.put("exception", rule.getException());
         values.put("remark", rule.getRemark());
+        values.put("created", new Date().getTime());
 
-        return mDbHelper.getWritableDatabase().insert(DbHelper.TABLE_RULE, null, values);
+        return ContentUris.parseId(resolver.insert(URI_RULE_ALL, values));
     }
 
     public long restoreRule(Rule rule) {
@@ -95,11 +119,11 @@ public class BlockManager {
         values.put("created", rule.getCreated());
         values.put("remark", rule.getRemark());
 
-        mDbHelper.getWritableDatabase().update(DbHelper.TABLE_RULE, values, "_id = ?", new String[]{String.valueOf(rule.getId())});
+        resolver.update(ContentUris.withAppendedId(URI_RULE_ALL, rule.getId()), values, null, null);
     }
 
     public void deleteRule(Rule rule) {
-        mDbHelper.getWritableDatabase().delete(DbHelper.TABLE_RULE, "_id = ?", new String[]{String.valueOf(rule.getId())});
+        resolver.delete(ContentUris.withAppendedId(URI_RULE_ALL, rule.getId()), null, null);
     }
 
     /**
@@ -113,19 +137,19 @@ public class BlockManager {
         Cursor cursor = null;
 
         if (type == BlockContent.BLOCK_ALL) {
-            cursor = mDbHelper.getReadableDatabase().query(
-                    DbHelper.TABLE_BLOCKCONTENT, new String[]{"_id", "number", "type", "content", "created", "read"},
-                    "_id > ?", new String[]{String.valueOf(id)}, null, null, "created DESC"
+            cursor = resolver.query(
+                    URI_BLOCKCONTENT_ALL, new String[]{"_id", "number", "type", "content", "created", "read"},
+                    "_id > ?", new String[]{String.valueOf(id)}, "created DESC"
             );
         } else if (type == BlockContent.BLOCK_CALL) {
-            cursor = mDbHelper.getReadableDatabase().query(
-                    DbHelper.TABLE_BLOCKCONTENT, new String[]{"_id", "number", "type", "content", "created", "read"},
-                    "_id > ? AND type = ?", new String[]{String.valueOf(id),String.valueOf(BlockContent.BLOCK_CALL)}, null, null, "created DESC"
+            cursor = resolver.query(
+                    URI_BLOCKCONTENT_ALL, new String[]{"_id", "number", "type", "content", "created", "read"},
+                    "_id > ? AND type = ?", new String[]{String.valueOf(id), String.valueOf(BlockContent.BLOCK_CALL)}, "created DESC"
             );
         } else if (type == BlockContent.BLOCK_SMS) {
-            cursor = mDbHelper.getReadableDatabase().query(
-                    DbHelper.TABLE_BLOCKCONTENT, new String[]{"_id", "number", "type", "content", "created", "read"},
-                    "_id > ? AND type = ?", new String[]{String.valueOf(id),String.valueOf(BlockContent.BLOCK_SMS)}, null, null, "created DESC"
+            cursor = resolver.query(
+                    URI_BLOCKCONTENT_ALL, new String[]{"_id", "number", "type", "content", "created", "read"},
+                    "_id > ? AND type = ?", new String[]{String.valueOf(id), String.valueOf(BlockContent.BLOCK_SMS)}, "created DESC"
             );
         }
 
@@ -136,7 +160,7 @@ public class BlockManager {
                 content.setNumber(cursor.getString(1));
                 content.setType(cursor.getInt(2));
                 content.setContent(cursor.getString(3));
-                content.setCreated(cursor.getInt(4));
+                content.setCreated(cursor.getLong(4));
                 content.setRead(cursor.getInt(5));
 
                 result.add(content);
@@ -153,14 +177,12 @@ public class BlockManager {
     // content == null ??
     public long saveBlockContent(BlockContent content) {
         ContentValues values = new ContentValues();
-        if (content != null) {
-            values.put("number", content.getNumber());
-            values.put("type", content.getType()); // incoming call/sms
-            values.put("content", content.getContent());
-            values.put("created", content.getCreated());
-            values.put("read", content.getRead());
-        }
-        return mDbHelper.getWritableDatabase().insert(DbHelper.TABLE_BLOCKCONTENT, null, values);
+        values.put("number", content.getNumber());
+        values.put("type", content.getType()); // incoming call/sms
+        values.put("content", content.getContent());
+        values.put("created", content.getCreated());
+        values.put("read", content.getRead());
+        return ContentUris.parseId(resolver.insert(URI_BLOCKCONTENT_ALL, values));
 
     }
 
@@ -168,25 +190,23 @@ public class BlockManager {
         return saveBlockContent(content);
     }
 
-    public int deleteBlockContent(BlockContent content) {
-        return mDbHelper.getWritableDatabase().delete(DbHelper.TABLE_BLOCKCONTENT, "created=?",
-                new String[]{String.valueOf(content.getCreated())});
+    public void deleteBlockContent(BlockContent content) {
+        resolver.delete(ContentUris.withAppendedId(URI_BLOCKCONTENT_ALL, content.getId()), null, null);
     }
 
     // 将数据库中的所有拦截数据设为已读
     public void readAllBlockContent() {
         ContentValues values = new ContentValues();
         values.put("read", BlockContent.READED);
-        mDbHelper.getWritableDatabase().update(DbHelper.TABLE_BLOCKCONTENT, values, "read=?",
-                new String[]{String.valueOf(BlockContent.UNREADED)});
+        resolver.update(URI_BLOCKCONTENT_ALL, values, "read=?", new String[]{String.valueOf(BlockContent.UNREADED)});
     }
 
-    public int getUnReadCount(){
+    public int getUnReadCount() {
         int count = 0;
 
-        Cursor cursor = mDbHelper.getReadableDatabase().query(DbHelper.TABLE_BLOCKCONTENT, new String[]{"_id"},
-                "read=?", new String[]{"0"}, null, null, null);
-        if (cursor != null){
+        Cursor cursor = resolver.query(URI_BLOCKCONTENT_ALL, new String[]{"_id"},
+                "read=?", new String[]{"0"}, null);
+        if (cursor != null) {
             count = cursor.getCount();
             cursor.close();
         }
@@ -196,6 +216,7 @@ public class BlockManager {
 
     public boolean blockSMS(String sender, String content) {
         Log.v(getClass().getSimpleName(), "From sender " + sender + " should block?");
+        sender = trimCountryCode(sender);
         List<Rule> exceptions = getRules(TYPE_EXCEPT); //白名单
         if (exceptions != null && exceptions.size() > 0) {
             for (Rule exception : exceptions) {
@@ -206,11 +227,11 @@ public class BlockManager {
                         }
                         break;
                     case Rule.TYPE_WILDCARD:
-                        //TODO: SMS excepted wildcard manipulating
-                        if (wildcardMatch(exception.getContent(), sender)) ;
-                        return false;
+                        if (wildcardMatch(exception.getContent(), sender)) {
+                            return false;
+                        }
+                        break;
                     case Rule.TYPE_KEYWORD:
-                        //TODO: SMS excepted keyword manipulating
                         if (content.contains(exception.getContent())) {
                             return false;
                         }
@@ -229,13 +250,11 @@ public class BlockManager {
                         }
                         break;
                     case Rule.TYPE_WILDCARD:
-                        //TODO: SMS wildcard manipulating
                         if (wildcardMatch(rule.getContent(), sender)) {
                             return true;
                         }
                         break;
                     case Rule.TYPE_KEYWORD:
-                        //TODO: SMS keyword manipulating
                         if (content.contains(rule.getContent())) {
                             return true;
                         }
@@ -247,7 +266,7 @@ public class BlockManager {
     }
 
     public boolean blockCall(String caller) {
-        Log.v(getClass().getSimpleName(), "from caller "  + caller + " should block?");
+        caller = trimCountryCode(caller);
         List<Rule> exceptions = getRules(TYPE_EXCEPT);
         if (exceptions != null && exceptions.size() > 0) {
             for (Rule exception : exceptions) {
@@ -258,7 +277,6 @@ public class BlockManager {
                         }
                         break;
                     case Rule.TYPE_WILDCARD:
-                        //TODO: Excepted Wildcard manipulating
                         if (wildcardMatch(exception.getContent(), caller)) {
                             return false;
                         }
@@ -277,7 +295,6 @@ public class BlockManager {
                         }
                         break;
                     case Rule.TYPE_WILDCARD:
-                        //TODO: Wildcard manipulating
                         if (wildcardMatch(rule.getContent(), caller)) {
                             return true;
                         }
@@ -285,7 +302,6 @@ public class BlockManager {
                 }
             }
         }
-
         return false;
     }
 
@@ -353,5 +369,18 @@ public class BlockManager {
         return result;
     }
 
+
+    private String trimCountryCode(String phoneNumber) {
+        if (phoneNumber.charAt(0) == '+') {
+            if (COUNTRY_CODES.contains("," + phoneNumber.substring(1, 2) + ",")) {
+                return phoneNumber.substring(2);
+            } else if (COUNTRY_CODES.contains("," + phoneNumber.substring(1, 3) + ",")) {
+                return phoneNumber.substring(3);
+            } else if (COUNTRY_CODES.contains("," + phoneNumber.substring(1, 4) + ",")) {
+                return phoneNumber.substring(4);
+            }
+        }
+        return phoneNumber;
+    }
 
 }

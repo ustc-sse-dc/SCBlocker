@@ -11,7 +11,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 import edu.ustc.sse.scblocker.R;
 import edu.ustc.sse.scblocker.model.BlockContent;
@@ -20,7 +19,7 @@ import edu.ustc.sse.scblocker.model.BlockContent;
  * Created by dc on 000011/6/11.
  */
 public class BlockContentAdapter extends RecyclerView.Adapter<BlockContentAdapter.ViewHolder> {
-    public static SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+    public static SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     private Context mContext;
     public List<BlockContent> data;
@@ -35,6 +34,14 @@ public class BlockContentAdapter extends RecyclerView.Adapter<BlockContentAdapte
         return data.size();
     }
 
+    public BlockContent get(int index){
+        return data.get(index);
+    }
+
+    public void delete(int index){
+        data.remove(index);
+        notifyDataSetChanged();
+    }
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {

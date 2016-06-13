@@ -15,6 +15,8 @@ import de.robv.android.xposed.XposedHelpers;
 import edu.ustc.sse.scblocker.XposedMod;
 import edu.ustc.sse.scblocker.model.BlockContent;
 import edu.ustc.sse.scblocker.util.BlockManager;
+import edu.ustc.sse.scblocker.util.Logger;
+import edu.ustc.sse.scblocker.util.SettingsHelper;
 
 
 /**
@@ -25,12 +27,17 @@ public class SMSHook {
 
     private BlockManager mBlockerManager;
     private Context mContext;
+    private SettingsHelper mSettingsHelper;
 
     private SparseArray<String[]> smsArrays = new SparseArray<>();
 
+    public SMSHook() {
+        mSettingsHelper = new SettingsHelper();
+    }
+
 
     public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
-
+        Logger.log("Hook com.android.internal.telephony.RIL...");
         Class<?> clazz = XposedHelpers.findClass("com.android.internal.telephony.RIL", null);
         XposedBridge.hookAllConstructors(clazz, new XC_MethodHook() {
             @Override
@@ -43,6 +50,10 @@ public class SMSHook {
         XposedBridge.hookAllMethods(clazz, "processUnsolicited", new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                if (!mSettingsHelper.isEnable() || !mSettingsHelper.isEnableSMS()){
+                    return ;
+                }
+
                 Parcel p = (Parcel) param.args[0];
 
                 int position = p.dataPosition();
@@ -54,6 +65,7 @@ public class SMSHook {
                             boolean received = true;
 
                             String a[] = new String[2];
+                            // 这个param.thisObject就是挂钩的对象：com.android.internal.telephony.RIL
                             a[1] = (String) XposedHelpers.callMethod(param.thisObject, "responseString", p);
 
                             final SmsMessage sms = (SmsMessage) XposedHelpers.callStaticMethod(SmsMessage.class,
@@ -90,8 +102,9 @@ public class SMSHook {
 
 
                             if (received) {
+                                Logger.log("New SMS: " + sender );
                                 //判断是否需要拦截该短信
-                                if (mBlockerManager.blockSMS(sender, content)) {
+                                if (mBlockerManager.blockSMS(sender,content)) {
                                     try {
                                         XposedHelpers.callMethod(param.thisObject, "acknowledgeLastIncomingGsmSms",
                                                 true, 0, null);
@@ -107,7 +120,6 @@ public class SMSHook {
                                     intent.putExtra("type", BlockContent.BLOCK_SMS);
                                     intent.putExtra("number", sender);
                                     intent.putExtra("content", content);
-                                    intent.putExtra("created", sms.getTimestampMillis());
 
                                     mContext.sendBroadcast(intent);
                                 }
@@ -122,6 +134,8 @@ public class SMSHook {
         });
 
     }
+
+
 
     private boolean isFullFilled(String[] smss) {
         for (String sms : smss) {

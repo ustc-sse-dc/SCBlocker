@@ -70,4 +70,9 @@ public class BlockContent {
     public void setRead(int read) {
         this.read = read;
     }
+
+    @Override
+    public String toString() {
+        return "Number: " + number + "\tcontent:" + content ;
+    }
 }

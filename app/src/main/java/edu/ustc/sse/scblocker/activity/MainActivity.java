@@ -21,7 +21,6 @@ import edu.ustc.sse.scblocker.fragment.BlockContentFragment;
 import edu.ustc.sse.scblocker.fragment.RuleFragment;
 import edu.ustc.sse.scblocker.fragment.SettingFragment;
 import edu.ustc.sse.scblocker.model.BlockContent;
-import edu.ustc.sse.scblocker.util.BlockManager;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -60,7 +59,7 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        currentFragment = BlockContentFragment.newInstance(BlockManager.TYPE_ALL);
+        currentFragment = BlockContentFragment.newInstance(BlockContent.BLOCK_ALL);
         mFragmentManager.beginTransaction()
                 .add(R.id.fragment_container_relativelayout, currentFragment)
                 .commit();

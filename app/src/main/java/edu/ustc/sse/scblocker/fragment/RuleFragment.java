@@ -74,7 +74,6 @@ public class RuleFragment extends Fragment  {
                         Rule rule = mRuleAdapter.getItem(id);
                         mRuleAdapter.delete(id);
                         mBlockManager.deleteRule(rule);
-                        //TODO: Delete from database and notify change
                         Snackbar.make(mRecyclerView, String.format("Rule item %d", id), Snackbar.LENGTH_LONG).show();
                     }
                 })
@@ -113,13 +112,6 @@ public class RuleFragment extends Fragment  {
 
         return view;
     }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-    }
-
-
 
 
     @Override

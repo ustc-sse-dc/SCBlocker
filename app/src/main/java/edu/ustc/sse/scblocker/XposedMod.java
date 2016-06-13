@@ -7,13 +7,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.XModuleResources;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.app.TaskStackBuilder;
-import android.util.Log;
 
 import java.util.Date;
 
@@ -97,6 +95,8 @@ public class XposedMod implements IXposedHookZygoteInit, IXposedHookLoadPackage,
 
                         final Context mContext = (Context)XposedHelpers.getObjectField(param.thisObject, "mContext");
                         mBlockerManager = new BlockManager(mContext);
+                        notifManager = NotificationManagerCompat.from(mContext);
+                        notiBuilder = new NotificationCompat.Builder(mContext).setContentTitle("SCBlocker").setTicker("SCBlocker").setAutoCancel(true);
 
                         HandlerThread thread = new HandlerThread("SCBlocker");
                         thread.start();
@@ -122,30 +122,27 @@ public class XposedMod implements IXposedHookZygoteInit, IXposedHookLoadPackage,
 
     private void saveHistoryAndNotify(Context context, Intent intent){
         if (intent != null && intent.getExtras() != null){
-            BlockContent content = null;
-            Bundle bundle = intent.getExtras();
-            int type = bundle.getInt("type");
+            BlockContent content = new BlockContent();
+            int type = intent.getIntExtra("type", -1);
             switch (type){ // incoming sms or incoming call
                 case BlockContent.BLOCK_CALL:
-                    content = new BlockContent();
-                    content.setNumber(bundle.getString("number"));
+                    content.setType(BlockContent.BLOCK_CALL);
+                    content.setNumber(intent.getStringExtra("number"));
                     content.setContent("");
                     content.setCreated(new Date().getTime());
-                    content.setType(BlockContent.BLOCK_CALL);
                     content.setRead(BlockContent.UNREADED);
                     break;
                 case BlockContent.BLOCK_SMS:
-                    content = new BlockContent();
                     content.setType(BlockContent.BLOCK_SMS);
-                    content.setNumber(bundle.getString("number"));
-                    content.setContent(bundle.getString("content"));
-                    content.setCreated(bundle.getLong("created"));
+                    content.setNumber(intent.getStringExtra("number"));
+                    content.setContent(intent.getStringExtra("content"));
+                    content.setCreated(new Date().getTime());
                     content.setRead(BlockContent.UNREADED);
                     break;
             }
 
+            //Logger.log(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(content.getCreated())));
             mBlockerManager.saveBlockContent(content);
-            Log.v(getClass().getSimpleName(), "Block content from " + content.getNumber() + " at " + content.getCreated());
 
             if (mSettingsHelper.isShowBlockNotification()) {
                 showNotification(context, type);
