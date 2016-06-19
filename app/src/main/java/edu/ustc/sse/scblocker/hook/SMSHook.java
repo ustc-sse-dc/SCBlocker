@@ -53,7 +53,6 @@ public class SMSHook {
                 if (!mSettingsHelper.isEnable() || !mSettingsHelper.isEnableSMS()){
                     return ;
                 }
-
                 Parcel p = (Parcel) param.args[0];
 
                 int position = p.dataPosition();
@@ -99,8 +98,6 @@ public class SMSHook {
                                     received = false;
                                 }
                             }
-
-
                             if (received) {
                                 Logger.log("New SMS: " + sender );
                                 //判断是否需要拦截该短信
@@ -112,7 +109,6 @@ public class SMSHook {
                                         XposedHelpers.callMethod(param.thisObject, "acknowledgeLastIncomingCdmaSms",
                                                 true, 0, null);
                                     }
-
                                     param.setResult(null);
 
                                     //  后续处理

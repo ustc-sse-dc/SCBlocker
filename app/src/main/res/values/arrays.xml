@@ -3,7 +3,6 @@
 
     <string-array name="ruleTypes">
         <item>phone number</item>
-        <item>wildcard number</item>
         <item>keyword for sms</item>
     </string-array>
 

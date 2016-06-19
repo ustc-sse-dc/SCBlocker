@@ -60,25 +60,19 @@ public class CallHook {
                 if (!mSettingsHelper.isEnable() || !mSettingsHelper.isEnableCall()){
                     return;
                 }
-
                 try{
-
                     Object connection = XposedHelpers.getObjectField(param.args[0], "result");
                     final Object call = XposedHelpers.callMethod(connection, "getCall");
                     final String caller = (String)XposedHelpers.callMethod(connection, "getAddress");
 
                     Logger.log("Incoming call: " + caller);
-
-
                     // 判断是否需要拦截
                     if (mBlockerManager.blockCall(caller)) {
                         //调用PhoneUtils.hangupIncomingCall()挂断这个电话。
                         XposedHelpers.callStaticMethod(XposedHelpers.findClass("com.android.phone.PhoneUtils",
                                 loadPackageParam.classLoader), "hangupRingingCall", call);
-
                         param.setResult(null);
-
-                        // 发送给本应用一个信息广播
+                        // 发送给本应用一个广播
                         Intent intent = new Intent(XposedMod.FILTER_NOTIFY_BLOCKED);
                         intent.putExtra("type", BlockContent.BLOCK_CALL);
                         intent.putExtra("number", caller);
@@ -88,10 +82,7 @@ public class CallHook {
                     Logger.log("Block call error...");
                     Log.e(TAG, "Error in blocking incoming call ", t);
                 }
-
             }
         });
-
-
     }
 }

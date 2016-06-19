@@ -8,8 +8,7 @@ import java.io.Serializable;
 public class Rule implements Serializable{
 
     public static final int TYPE_STRING   = 0;
-    public static final int TYPE_WILDCARD = 1;
-    public static final int TYPE_KEYWORD  = 2;
+    public static final int TYPE_KEYWORD  = 1;
 
 
     public static final int BLOCK_BOTH = 0;
@@ -18,7 +17,7 @@ public class Rule implements Serializable{
 
     private long id;
     private String content;         // 要拦截的号码、关键字、
-    private int type;               // phone number? whildcard number? keyword for sms?
+    private int type;               // phone number? keyword for sms?
                                     // block sms? call? or both?
                                     // sms call block?
     private int sms;                //  1   1    0(both)

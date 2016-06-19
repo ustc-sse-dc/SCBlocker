@@ -174,7 +174,7 @@ public class BlockManager {
         return result;
     }
 
-    // content == null ??
+
     public long saveBlockContent(BlockContent content) {
         ContentValues values = new ContentValues();
         values.put("number", content.getNumber());
@@ -226,11 +226,6 @@ public class BlockManager {
                             return false;
                         }
                         break;
-                    case Rule.TYPE_WILDCARD:
-                        if (wildcardMatch(exception.getContent(), sender)) {
-                            return false;
-                        }
-                        break;
                     case Rule.TYPE_KEYWORD:
                         if (content.contains(exception.getContent())) {
                             return false;
@@ -246,11 +241,6 @@ public class BlockManager {
                 switch (rule.getType()) {
                     case Rule.TYPE_STRING:
                         if (sender.equals(rule.getContent())) {
-                            return true;
-                        }
-                        break;
-                    case Rule.TYPE_WILDCARD:
-                        if (wildcardMatch(rule.getContent(), sender)) {
                             return true;
                         }
                         break;
@@ -276,11 +266,6 @@ public class BlockManager {
                             return false;
                         }
                         break;
-                    case Rule.TYPE_WILDCARD:
-                        if (wildcardMatch(exception.getContent(), caller)) {
-                            return false;
-                        }
-                        break;
                 }
             }
         }
@@ -294,80 +279,12 @@ public class BlockManager {
                             return true;
                         }
                         break;
-                    case Rule.TYPE_WILDCARD:
-                        if (wildcardMatch(rule.getContent(), caller)) {
-                            return true;
-                        }
-                        break;
                 }
             }
         }
         return false;
     }
 
-    //TODO: figure it out
-    private boolean wildcardMatch(String wildcard, String str) {
-        if (wildcard == null || str == null)
-            return false;
-
-        boolean result = false;
-        char c;
-        boolean beforeStar = false;
-        int back_i = 0;
-        int back_j = 0;
-        int i, j;
-        for (i = 0, j = 0; i < str.length(); ) {
-            if (wildcard.length() <= j) {
-                if (back_i != 0) {
-                    beforeStar = true;
-                    i = back_i;
-                    j = back_j;
-                    back_i = 0;
-                    back_j = 0;
-                    continue;
-                }
-                break;
-            }
-
-            if ((c = wildcard.charAt(j)) == '*') {
-                if (j == wildcard.length() - 1) {
-                    result = true;
-                    break;
-                }
-                beforeStar = true;
-                j++;
-                continue;
-            }
-
-            if (beforeStar) {
-                if (str.charAt(i) == c) {
-                    beforeStar = false;
-                    back_i = i + 1;
-                    back_j = j;
-                    j++;
-                }
-            } else {
-                if (c != '?' && c != str.charAt(i)) {
-                    result = false;
-                    if (back_i != 0) {
-                        beforeStar = true;
-                        i = back_i;
-                        j = back_j;
-                        back_i = 0;
-                        back_j = 0;
-                        continue;
-                    }
-                    break;
-                }
-                j++;
-            }
-            i++;
-        }
-
-        if (i == str.length() && j == wildcard.length())
-            result = true;
-        return result;
-    }
 
 
     private String trimCountryCode(String phoneNumber) {

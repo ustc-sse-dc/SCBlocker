@@ -71,7 +71,6 @@ public class XposedMod implements IXposedHookZygoteInit, IXposedHookLoadPackage,
             if (smallNotificationIcon != -1){
                 return;
             }
-
             getNotificationIcon(resParam);
         }
     }
@@ -83,7 +82,6 @@ public class XposedMod implements IXposedHookZygoteInit, IXposedHookLoadPackage,
 
 
     private void initNotificationBroadcastReceiver(XC_LoadPackage.LoadPackageParam loadPackageParam){
-        //TODO: What's the meaning of this block of code??
         XposedHelpers.findAndHookMethod("com.android.server.am.ActivityManagerService", loadPackageParam.classLoader, "systemReady", Runnable.class, new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(final MethodHookParam param) throws Throwable {

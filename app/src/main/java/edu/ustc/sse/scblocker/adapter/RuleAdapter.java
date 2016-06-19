@@ -79,42 +79,6 @@ public class RuleAdapter extends RecyclerView.Adapter<RuleAdapter.RuleHolder> {
         notifyDataSetChanged();
     }
 
-    /**
-    public static class RuleHolder extends RecyclerView.ViewHolder {
-
-        private Rule mRule;
-
-        private ImageView iv_blockType;
-        private TextView tv_ruleContent;
-        private TextView tv_remark;
-
-        public RuleHolder(View itemView){
-            super(itemView);
-            iv_blockType = (ImageView)itemView.findViewById(R.id.iv_blockType);
-            tv_ruleContent = (TextView)itemView.findViewById(R.id.tv_ruleContent);
-            tv_remark = (TextView)itemView.findViewById(R.id.tv_remark);
-        }
-
-        public void bindRule(Rule rule){
-            mRule = rule;
-            if (mRule.getException() == 1){ // 白名单
-                iv_blockType.setImageResource(R.drawable.ic_except);
-            }else if (mRule.getSms() == 1 && mRule.getCall() == 1){ // block both
-                iv_blockType.setImageResource(R.drawable.ic_block_both);
-            }else if (mRule.getSms() == 1){ // block sms
-                iv_blockType.setImageResource(R.drawable.ic_block_sms);
-            }else if (mRule.getCall() == 1){ // block call
-                iv_blockType.setImageResource(R.drawable.ic_block_call);
-            }
-
-            tv_ruleContent.setText(mRule.getContent());
-            tv_remark.setText(mRule.getRemark());
-
-        }
-
-    }
-
-     **/
 
     public static class RuleHolder extends RecyclerView.ViewHolder {
         private SparseArray<View> views = new SparseArray<>();

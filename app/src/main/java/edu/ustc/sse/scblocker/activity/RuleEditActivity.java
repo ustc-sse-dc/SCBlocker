@@ -6,7 +6,9 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -64,6 +66,31 @@ public class RuleEditActivity extends AppCompatActivity implements View.OnClickL
         ll_container = (LinearLayout)findViewById(R.id.ll_container_rule);
 
         et_rule = (EditText) findViewById(R.id.et_rule);
+        et_rule.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                String text = editable.toString();
+                if (text.matches("\\w*") && !text.matches("[0-9]*")){
+                    sp_type.setSelection(Rule.TYPE_KEYWORD);
+                    sp_type.setClickable(false);
+                    sp_block.setSelection(Rule.BLOCK_SMS);
+                    sp_block.setClickable(false);
+                }else{
+                    sp_type.setSelection(Rule.TYPE_STRING);
+                    sp_block.setSelection(Rule.BLOCK_BOTH);
+                }
+            }
+        });
 
         sp_type = (Spinner)findViewById(R.id.sp_type);
         sp_type.setOnItemSelectedListener(this);
@@ -106,12 +133,13 @@ public class RuleEditActivity extends AppCompatActivity implements View.OnClickL
             case R.id.sp_type:
                 if (position == Rule.TYPE_KEYWORD){
                     sp_block.setSelection(Rule.BLOCK_SMS);
+                }else if(position == Rule.TYPE_STRING) {
+                    sp_block.setSelection(Rule.BLOCK_BOTH);
                 }
                 break;
             case R.id.sp_block:
                 if (position != Rule.BLOCK_SMS && sp_type.getSelectedItemPosition() == Rule.TYPE_KEYWORD){
                     sp_block.setSelection(Rule.BLOCK_SMS);
-
                 }
                 break;
         }
