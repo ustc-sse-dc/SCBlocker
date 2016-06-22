@@ -30,12 +30,13 @@ public class MainActivity extends AppCompatActivity
 
 
     private FloatingActionButton fab = null;
+    private Toolbar toolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -63,6 +64,7 @@ public class MainActivity extends AppCompatActivity
         mFragmentManager.beginTransaction()
                 .add(R.id.fragment_container_relativelayout, currentFragment)
                 .commit();
+        toolbar.setTitle(R.string.all);
 
     }
 
@@ -105,26 +107,30 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.add_rule) {
-            //TODO: Open add rule activity
             if (currentFragment instanceof RuleFragment){
                 Intent intent = RuleEditActivity.newIntent(this, RuleEditActivity.OPERATION_ADD);
                 currentFragment.startActivityForResult(intent, RuleFragment.REQUEST_CODE);
             }else {
                 Snackbar.make(fab, "Add rule only allowed in rule's panel!", Snackbar.LENGTH_LONG).show();
             }
+
         } else if (id == R.id.all_rules) {
+            toolbar.setTitle(R.string.all_rule);
             currentFragment = new RuleFragment();
             switchFragment(currentFragment);
             fab.show();
         } else if (id == R.id.blockcontent_all) {
+            toolbar.setTitle(R.string.all);
             currentFragment = BlockContentFragment.newInstance(BlockContent.BLOCK_ALL);
             switchFragment(currentFragment);
             fab.hide();
         } else if (id == R.id.blockcontent_call) {
+            toolbar.setTitle(R.string.call);
             currentFragment = BlockContentFragment.newInstance(BlockContent.BLOCK_CALL);
             switchFragment(currentFragment);
             fab.hide();
         } else if (id == R.id.blockcontent_sms) {
+            toolbar.setTitle(R.string.sms);
             currentFragment = BlockContentFragment.newInstance(BlockContent.BLOCK_SMS);
             switchFragment(currentFragment);
             fab.hide();

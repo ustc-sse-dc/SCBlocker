@@ -32,12 +32,12 @@
         </menu>
     </item>
 
-    <item android:title="Settings">
+    <item android:title="@string/title_activity_settings">
         <menu>
             <group android:checkableBehavior="single">
                 <item android:id="@+id/setting"
                       android:icon="@drawable/ic_dns_black_24dp"
-                      android:title="Setting" />
+                      android:title="@string/title_activity_settings" />
             </group>
         </menu>
     </item>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="add_rule">添加规则</string>
+    <string name="all_rule">所有规则</string>
+    <string name="block_content">拦截记录</string>
+    <string name="all">所有记录</string>
+    <string name="call">电话记录</string>
+    <string name="sms">短信记录</string>
+
+    <string name="rule_label">规则内容</string>
+    <string name="rule_label_type">拦截类型</string>
+    <string name="rule_label_block">拦截粒度</string>
+    <string name="rule_label_except">白名单</string>
+    <string name="rule_remark">规则描述</string>
+    <string name="rule_accept">保存</string>
+
+    <string name="rule_empty_tip">请输入一个非空的拦截规则！</string>
+
+    <string name="general_enable">拦   截</string>
+    <string name="general_sms_enable">拦截短信</string>
+    <string name="general_call_enable">拦截电话</string>
+    <string name="general_show_notification">允许通知</string>
+    <string name="title_activity_settings">软件设置</string>
+
+
+
+</resources>
